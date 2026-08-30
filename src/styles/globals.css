@@ -1,0 +1,430 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root,
+[data-theme="dark"] {
+  --bg: #0e0e0e;
+  --text: #d8d8d8;
+  --accent: #ff4a4a;
+  --font-degular-display: "Degular Display";
+  --font-degular-text: "Degular Text";
+}
+
+[data-theme="light"] {
+  --bg: #f2f0ec;
+  --text: #16161a;
+  --accent: #ff4a4a;
+  --font-degular-display: "Degular Display";
+  --font-degular-text: "Degular Text";
+}
+
+/* ── Degular Display ── */
+@font-face {
+  font-family: "Degular Display";
+  src: url("/fonts/DegularDisplay-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Degular Display";
+  src: url("/fonts/DegularDisplay-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Degular Display";
+  src: url("/fonts/DegularDisplay-Semibold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Degular Display";
+  src: url("/fonts/DegularDisplay-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Degular Display";
+  src: url("/fonts/DegularDisplay-Black.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Degular Text ── */
+@font-face {
+  font-family: "Degular Text";
+  src: url("/fonts/DegularText-Light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Degular Text";
+  src: url("/fonts/DegularText-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Degular Text";
+  src: url("/fonts/DegularText-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Degular Text";
+  src: url("/fonts/DegularText-Semibold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Degular Text";
+  src: url("/fonts/DegularText-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ── Custom cursor — hide native on precise-pointer devices ──
+   Only applied when the JS cursor has actually mounted and is tracking. */
+[data-cursor-mounted] body,
+[data-cursor-mounted] a,
+[data-cursor-mounted] button,
+[data-cursor-mounted] [data-cursor] {
+  cursor: none !important;
+}
+
+/* ── Precision Cursor Dot ── */
+.custom-cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 999px;
+  background: var(--text);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 2px rgba(255, 255, 255, 1);
+  pointer-events: none;
+  z-index: 10000;
+  will-change: transform;
+}
+
+[data-theme="light"] .custom-cursor-dot {
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.35), 0 0 2px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Smooth Glass Follower Ring ── */
+.custom-cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition:
+    width 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    margin 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+[data-theme="light"] .custom-cursor-ring {
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.custom-cursor-ring--active {
+  width: 88px;
+  height: 88px;
+  margin: -44px 0 0 -44px;
+  background: rgba(14, 14, 14, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(255, 74, 74, 0.15);
+}
+
+[data-theme="light"] .custom-cursor-ring--active {
+  background: rgba(242, 240, 236, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), inset 0 0 12px rgba(255, 74, 74, 0.15);
+}
+
+.custom-cursor-ring--clicking {
+  width: 68px;
+  height: 68px;
+  margin: -34px 0 0 -34px;
+  border-color: var(--accent);
+  transition-duration: 0.1s;
+}
+
+.custom-cursor-label {
+  font-family: var(--font-degular-text), Arial, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text);
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+[data-theme="light"] .custom-cursor-label {
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* ── Liquid Pixel Cursor (Fluid Dynamics + Difference Blend Mode) ── */
+.liquid-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+  will-change: transform, width, height;
+  transition:
+    width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    padding 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-radius 0.3s ease;
+}
+
+.liquid-cursor--active {
+  width: auto;
+  min-width: 88px;
+  height: 34px;
+  padding: 0 18px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+}
+
+.liquid-cursor--clicking {
+  transform: scale(0.82) !important;
+  transition: transform 0.08s ease-out;
+}
+
+/* Viscous trailing fluid meniscus halo */
+.liquid-cursor-follower {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  border: 1px dashed rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.05);
+  mix-blend-mode: difference;
+  pointer-events: none;
+  z-index: 99999;
+  will-change: transform;
+  transition:
+    width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.2s ease;
+}
+
+.liquid-cursor-follower--active {
+  width: 72px;
+  height: 72px;
+  opacity: 0.3;
+  border-style: solid;
+}
+
+.liquid-cursor-follower--clicking {
+  width: 24px;
+  height: 24px;
+}
+
+/* Sharp pixel center inside liquid core */
+.liquid-cursor__pixel-core {
+  width: 4px;
+  height: 4px;
+  background-color: #000000;
+  border-radius: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.liquid-cursor--active .liquid-cursor__pixel-core {
+  display: none;
+}
+
+.liquid-cursor__label {
+  font-family: var(--font-degular-text), monospace, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #000000; /* Inverts against #FFFFFF difference pill */
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  animation: liquidPixelLabel 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes liquidPixelLabel {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Marquee strip ── */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    /* -50% because the items array is duplicated in the DOM — 
+       moving -50% lands perfectly at the start of the duplicate */
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll var(--marquee-duration, 20s) linear infinite;
+}
+
+.marquee-track:hover {
+  /* UX reason: pause on hover lets the user read an item they want to focus on */
+  animation-play-state: paused;
+}
+
+/* ── Logo Marquee Filter Normalization ── */
+.logo-filter-dark,
+.logo-filter-normalized {
+  opacity: 0.72;
+  filter: brightness(0) invert(0.85);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logo-filter-light {
+  opacity: 1;
+  filter: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logo-filter-accent,
+.group\/logo:hover .group-hover\/logo\:logo-filter-accent {
+  opacity: 1 !important;
+  filter: brightness(0) saturate(100%) invert(42%) sepia(85%) saturate(3200%) hue-rotate(335deg) brightness(101%) contrast(102%) drop-shadow(0 0 12px rgba(255, 74, 74, 0.55)) !important;
+}
+
+/* ── Hero Gradient Overlay (Themed) ── */
+.hero-gradient-overlay {
+  background: linear-gradient(
+    to top,
+    #0e0e0e 0%,
+    #0e0e0e 15%,
+    rgba(14, 14, 14, 0.88) 45%,
+    rgba(14, 14, 14, 0.55) 75%,
+    rgba(14, 14, 14, 0.3) 100%
+  );
+}
+
+[data-theme="light"] .hero-gradient-overlay {
+  background: linear-gradient(
+    to top,
+    #f2f0ec 0%,
+    #f2f0ec 18%,
+    rgba(242, 240, 236, 0.88) 45%,
+    rgba(242, 240, 236, 0.55) 75%,
+    rgba(242, 240, 236, 0.3) 100%
+  );
+}
+
+/* ── Reduced-motion overrides ── */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+
+  .magnetic-cursor {
+    transition-duration: 0ms;
+  }
+}
+
+html {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-degular-text), Arial, sans-serif;
+  letter-spacing: 0;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}
