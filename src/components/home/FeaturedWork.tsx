@@ -1,12 +1,27 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { CaseStudy } from "@/lib/types";
 import ProjectCard from "@/components/work/ProjectCard";
 import SectionLabel from "@/components/ui/SectionLabel";
+
+const RotundaCarousel = dynamic(
+  () => import("@/components/originkit/ui/rotunda-carousel"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex items-center justify-center bg-bg">
+        <span className="font-body text-eyebrow uppercase tracking-widest text-text/30 animate-pulse">
+          Loading 3D Archive...
+        </span>
+      </div>
+    ),
+  },
+);
 
 interface FeaturedWorkProps {
   studies: CaseStudy[];
@@ -15,8 +30,38 @@ interface FeaturedWorkProps {
 // Alternating ratios for visual rhythm across the row
 const RATIOS = ["portrait", "landscape", "portrait"] as const;
 
+const FALLBACK_SHOWCASE_IMAGES = [
+  { image: "/placeholder-media/studio-buntu/01.png" },
+  { image: "/placeholder-media/studio-buntu/02.png" },
+  { image: "/placeholder-media/studio-buntu/03.png" },
+  { image: "/placeholder-media/studio-buntu/04.png" },
+  { image: "/placeholder-media/studio-buntu/05.png" },
+  { image: "/placeholder-media/studio-buntu/onwww.jpg" },
+  { image: "/placeholder-media/studio-buntu/vghj.png" },
+  { image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=85" },
+];
+
 export default function FeaturedWork({ studies }: FeaturedWorkProps) {
   const sectionRef = useRef<HTMLElement>(null);
+
+  const carouselImages = useMemo(() => {
+    const extracted: { image: string }[] = [];
+    studies.forEach((s) => {
+      if (s.heroMedia?.url && !s.heroMedia.url.endsWith(".mp4") && !s.heroMedia.url.endsWith(".mov")) {
+        extracted.push({ image: s.heroMedia.url });
+      }
+      s.gallery?.forEach((g) => {
+        if (g.url && !g.url.endsWith(".mp4") && !g.url.endsWith(".mov")) {
+          extracted.push({ image: g.url });
+        }
+      });
+    });
+
+    if (extracted.length >= 6) {
+      return extracted.slice(0, 10);
+    }
+    return FALLBACK_SHOWCASE_IMAGES;
+  }, [studies]);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -26,6 +71,7 @@ export default function FeaturedWork({ studies }: FeaturedWorkProps) {
 
     const cards = section.querySelectorAll<HTMLElement>("[data-reveal-card]");
     const header = section.querySelector<HTMLElement>("[data-reveal-header]");
+    const rotunda = section.querySelector<HTMLElement>("[data-reveal-rotunda]");
 
     // Reveal section header first
     if (header) {
@@ -34,12 +80,30 @@ export default function FeaturedWork({ studies }: FeaturedWorkProps) {
         { opacity: 0 },
         {
           opacity: 1,
-          // UX reason: header fade-in frames the work section before the cards stagger in
           duration: 0.65,
           ease: "power2.out",
           scrollTrigger: {
             trigger: section,
             start: "top 80%",
+            once: true,
+          },
+        },
+      );
+    }
+
+    // Reveal 3D Rotunda Carousel
+    if (rotunda) {
+      gsap.fromTo(
+        rotunda,
+        { opacity: 0, scale: 0.96 },
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 0.8,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: rotunda,
+            start: "top 85%",
             once: true,
           },
         },
@@ -53,13 +117,12 @@ export default function FeaturedWork({ studies }: FeaturedWorkProps) {
       {
         opacity: 1,
         y: 0,
-        // UX reason: staggered card reveal lets each project land independently, giving the work room to breathe
         duration: 0.65,
         ease: "power2.out",
         stagger: 0.1,
         scrollTrigger: {
-          trigger: section,
-          start: "top 70%",
+          trigger: rotunda || section,
+          start: "bottom 80%",
           once: true,
         },
       },
@@ -77,7 +140,7 @@ export default function FeaturedWork({ studies }: FeaturedWorkProps) {
       {/* Section header with SectionLabel & bold short sentence */}
       <div
         data-reveal-header
-        className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 md:mb-16 border-t border-text/10 pt-10"
+        className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 md:mb-12 border-t border-text/10 pt-10"
         style={{ opacity: 0 }}
       >
         <div>
@@ -90,18 +153,54 @@ export default function FeaturedWork({ studies }: FeaturedWorkProps) {
           </h2>
         </div>
 
-        <Link
-          href="/work"
-          id="featured-work-all-link"
-          data-cursor="true"
-          data-cursor-text="View All"
-          className="font-body text-eyebrow uppercase tracking-widest text-text/50 hover:text-accent transition-colors duration-micro ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          All work (4) →
-        </Link>
+        <div className="flex items-center gap-6">
+          <span className="font-body text-eyebrow uppercase tracking-widest text-text/40 hidden sm:inline-block">
+            [ DRAG TO EXPLORE ]
+          </span>
+          <Link
+            href="/work"
+            id="featured-work-all-link"
+            data-cursor="true"
+            data-cursor-text="View All"
+            className="font-body text-eyebrow uppercase tracking-widest text-text/50 hover:text-accent transition-colors duration-micro ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            All work (4) →
+          </Link>
+        </div>
       </div>
 
-      {/* Cards */}
+      {/* 3D WebGL Rotunda Carousel Showcase */}
+      <div
+        data-reveal-rotunda
+        className="w-full relative h-[420px] sm:h-[500px] md:h-[580px] lg:h-[640px] mb-16 md:mb-24 overflow-hidden border border-text/10 bg-bg select-none"
+        style={{ opacity: 0 }}
+      >
+        <RotundaCarousel
+          images={carouselImages}
+          background="#0E0E0E"
+          gap={40}
+          panelWidth={1500}
+          panelHeight={1000}
+          rounded={2}
+          distance={76}
+          tilt={0}
+          speed={30}
+          cursor={{ hover: 85, damping: 55 }}
+          style={{ width: "100%", height: "100%" }}
+        />
+        
+        {/* Subtle bottom edge gradient & interactive indicator */}
+        <div className="absolute inset-x-0 bottom-0 pointer-events-none flex items-center justify-between p-4 md:p-6 bg-gradient-to-t from-bg/90 via-bg/20 to-transparent">
+          <span className="font-body text-eyebrow uppercase tracking-widest text-text/60 bg-bg/80 px-3 py-1.5 border border-text/10">
+            3D Studio Archive
+          </span>
+          <span className="font-body text-eyebrow uppercase tracking-widest text-text/40">
+            Interactive Ring
+          </span>
+        </div>
+      </div>
+
+      {/* Case Study Cards Grid */}
       <div className="grid grid-cols-mobile gap-y-12 gap-x-grid-mobile md:grid-cols-tablet md:gap-grid-tablet lg:grid-cols-desktop lg:gap-grid-laptop xl:gap-grid-desktop">
         {studies.map((study, i) => (
           <div
