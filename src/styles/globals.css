@@ -114,97 +114,84 @@
   cursor: none !important;
 }
 
-/* ── Precision Cursor Dot ── */
-.custom-cursor-dot {
+/* ── ASCII Single Glyph Cursor ── */
+.ascii-cursor {
   position: fixed;
   top: 0;
   left: 0;
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -3px;
-  border-radius: 999px;
-  background: var(--text);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 2px rgba(255, 255, 255, 1);
   pointer-events: none;
   z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   will-change: transform;
+  transform: translate(-50%, -50%);
+  user-select: none;
 }
 
-[data-theme="light"] .custom-cursor-dot {
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.35), 0 0 2px rgba(0, 0, 0, 0.6);
-}
-
-/* ── Smooth Glass Follower Ring ── */
-.custom-cursor-ring {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 36px;
-  height: 36px;
-  margin: -18px 0 0 -18px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(2px);
-  pointer-events: none;
-  z-index: 9999;
+.ascii-cursor-glyph {
+  font-family: "Courier New", "Consolas", monospace;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  width: 1ch;
+  height: 1ch;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  color: var(--text);
+  /* Contrast halo ensuring crisp legibility on dark and light surfaces */
+  text-shadow:
+    0 0 3px rgba(0, 0, 0, 0.95),
+    0 0 1px #000000;
   transition:
-    width 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-    height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-    margin 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-    background 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform;
+    color 0.16s ease-out,
+    text-shadow 0.16s ease-out;
+  transform-origin: center center;
 }
 
-[data-theme="light"] .custom-cursor-ring {
-  border: 1px solid rgba(0, 0, 0, 0.18);
-  background: rgba(0, 0, 0, 0.03);
+[data-theme="light"] .ascii-cursor-glyph {
+  text-shadow:
+    0 0 3px rgba(255, 255, 255, 0.95),
+    0 0 1px #ffffff;
 }
 
-.custom-cursor-ring--active {
-  width: 88px;
-  height: 88px;
-  margin: -44px 0 0 -44px;
-  background: rgba(14, 14, 14, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(255, 74, 74, 0.15);
+.ascii-cursor-glyph--active {
+  color: var(--accent) !important;
+  text-shadow:
+    0 0 10px rgba(255, 74, 74, 0.85),
+    0 0 20px rgba(255, 74, 74, 0.45) !important;
 }
 
-[data-theme="light"] .custom-cursor-ring--active {
-  background: rgba(242, 240, 236, 0.92);
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), inset 0 0 12px rgba(255, 74, 74, 0.15);
+[data-theme="light"] .ascii-cursor-glyph--active {
+  color: var(--accent) !important;
+  text-shadow:
+    0 0 8px rgba(255, 74, 74, 0.65),
+    0 0 16px rgba(255, 74, 74, 0.3) !important;
 }
 
-.custom-cursor-ring--clicking {
-  width: 68px;
-  height: 68px;
-  margin: -34px 0 0 -34px;
-  border-color: var(--accent);
-  transition-duration: 0.1s;
-}
-
-.custom-cursor-label {
+.ascii-cursor-label {
   font-family: var(--font-degular-text), Arial, sans-serif;
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text);
+  background: rgba(14, 14, 14, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 2px 7px;
+  border-radius: 2px;
+  backdrop-filter: blur(8px);
   white-space: nowrap;
   pointer-events: none;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
 }
 
-[data-theme="light"] .custom-cursor-label {
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+[data-theme="light"] .ascii-cursor-label {
+  background: rgba(245, 243, 239, 0.92);
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
 
 /* ── Liquid Pixel Cursor (Fluid Dynamics + Difference Blend Mode) ── */

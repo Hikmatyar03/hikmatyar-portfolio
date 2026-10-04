@@ -5,7 +5,7 @@ import Nav from "@/components/layout/Nav";
 import Footer from "@/components/layout/Footer";
 import PageTransitionWrapper from "@/components/layout/PageTransitionWrapper";
 import MagneticCursor from "@/components/cursor/MagneticCursor";
-import InkBleedCursor from "@/components/cursor/InkBleedCursor";
+import AsciiCursorScope from "@/components/cursor/AsciiCursorScope";
 import PagePreloader from "@/components/layout/PagePreloader";
 
 export const metadata: Metadata = {
@@ -39,8 +39,8 @@ export default function RootLayout({
           {/* First visit preloader */}
           <PagePreloader />
 
-          {/* Organic Ink Bleed Canvas Layer (z-index 30) */}
-          <InkBleedCursor />
+          {/* ASCII Ink Bleed cursor reaction layer (z-index 25, hero/landing only) */}
+          <AsciiCursorScope />
 
           {/* Magnetic GSAP cursor system with mix-blend-mode: difference */}
           <MagneticCursor />

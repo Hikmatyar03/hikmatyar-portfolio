@@ -2,122 +2,89 @@
 
 import { useEffect, useRef } from "react";
 import { useReducedMotion } from "framer-motion";
+import { ASCII_FONT_FAMILY } from "@/lib/asciiShader";
 
 /**
- * CustomCursor — two-layer magnetic cursor.
+ * CustomCursor — Single ASCII glyph cursor.
  *
- * Architecture:
- *   • cursor-dot   : snaps to mouse instantly (no interpolation)
- *   • cursor-ring  : lerps toward the dot with a 0.1 factor (~80ms lag feel)
- *
- * Both layers are driven by a single rAF loop, keeping layout and paint
- * on the compositor thread — zero jank even at 120fps.
- *
- * UX reason: The lerp delay gives the cursor weight and personality;
- * it feels like the ring is magnetically attracted to the dot.
+ * Replaces the legacy ring+dot elements with a single monospace
+ * ASCII character matching the density ramp of the portfolio.
  */
 export default function CustomCursor() {
-  const dotRef = useRef<HTMLDivElement>(null);
-  const ringRef = useRef<HTMLDivElement>(null);
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const glyphRef = useRef<HTMLSpanElement>(null);
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
-    // Skip entirely on touch / coarse-pointer devices (mobile, tablets)
     if (window.matchMedia("(pointer: coarse)").matches) return;
 
-    // Type-safe local references — early return above ensures these are used
-    // only on pointer:fine environments where the DOM elements are mounted
-    const dot = dotRef.current!;
-    const ring = ringRef.current!;
+    const cursor = cursorRef.current;
+    const glyph = glyphRef.current;
+    if (!cursor || !glyph) return;
 
-    // Current mouse position (updates instantly on mousemove)
     let mouseX = -100;
     let mouseY = -100;
+    let currentX = -100;
+    let currentY = -100;
 
-    // Ring's current interpolated position
-    let ringX = -100;
-    let ringY = -100;
-
-    // Lerp factor — lower = more lag/trail; 0.1 ≈ 80ms feel at 60fps
-    // Reduced-motion: instant follow (factor = 1)
-    const LERP = prefersReducedMotion ? 1 : 0.1;
-
+    const LERP = prefersReducedMotion ? 1 : 0.15;
     let rafId: number;
     let isRunning = true;
-
-    // Show cursor once we have a real position (prevent off-screen flash)
-    dot.style.opacity = "0";
-    ring.style.opacity = "0";
     let hasEnteredWindow = false;
 
-    // ── rAF loop ──────────────────────────────────────────────────────
+    cursor.style.opacity = "0";
+
     function tick() {
       if (!isRunning) return;
 
-      // Lerp ring toward mouse
-      ringX += (mouseX - ringX) * LERP;
-      ringY += (mouseY - ringY) * LERP;
+      currentX += (mouseX - currentX) * LERP;
+      currentY += (mouseY - currentY) * LERP;
 
-      // Apply transforms (compositor-only — no layout, no paint)
-      dot.style.transform = `translate(calc(${mouseX}px - 50%), calc(${mouseY}px - 50%))`;
-      ring.style.transform = `translate(calc(${ringX}px - 50%), calc(${ringY}px - 50%))`;
-
+      cursor!.style.transform = `translate(${currentX}px, ${currentY}px)`;
       rafId = requestAnimationFrame(tick);
     }
 
     rafId = requestAnimationFrame(tick);
 
-    // ── Mouse tracking ─────────────────────────────────────────────────
     function onMouseMove(e: MouseEvent) {
       mouseX = e.clientX;
       mouseY = e.clientY;
 
       if (!hasEnteredWindow) {
         hasEnteredWindow = true;
-        dot.style.opacity = "1";
-        ring.style.opacity = "1";
-        // Snap ring to starting position so there's no first-frame flyby
-        ringX = mouseX;
-        ringY = mouseY;
+        cursor!.style.opacity = "1";
+        currentX = mouseX;
+        currentY = mouseY;
       }
     }
 
-    // ── Hover state — interactive targets ──────────────────────────────
     const INTERACTIVE =
-      'a, button, [role="button"], input, select, textarea, label, ' +
-      '[data-cursor="hover"], summary, [tabindex]:not([tabindex="-1"])';
+      'a, button, [role="button"], input, select, textarea, label, [data-cursor="hover"], [data-cursor-text]';
 
-    // Use event delegation on document — covers dynamically added elements
     function onMouseOver(e: MouseEvent) {
       if ((e.target as Element).closest(INTERACTIVE)) {
-        dot.classList.add("is-hovered");
-        ring.classList.add("is-hovered");
+        glyph!.textContent = "@";
+        glyph!.classList.add("ascii-cursor-glyph--active");
       } else {
-        dot.classList.remove("is-hovered");
-        ring.classList.remove("is-hovered");
+        glyph!.textContent = ":";
+        glyph!.classList.remove("ascii-cursor-glyph--active");
       }
     }
 
-    // ── Click state — physical compression feedback ─────────────────────
     function onMouseDown() {
-      dot.classList.add("is-clicking");
-      ring.classList.add("is-clicking");
+      glyph!.style.transform = "scale(0.85)";
     }
 
     function onMouseUp() {
-      dot.classList.remove("is-clicking");
-      ring.classList.remove("is-clicking");
+      glyph!.style.transform = "scale(1)";
     }
 
-    // ── Hide when cursor leaves viewport ───────────────────────────────
     function onDocMouseLeave() {
-      dot.classList.add("is-hidden");
-      ring.classList.add("is-hidden");
+      cursor!.style.opacity = "0";
     }
 
     function onDocMouseEnter() {
-      dot.classList.remove("is-hidden");
-      ring.classList.remove("is-hidden");
+      if (hasEnteredWindow) cursor!.style.opacity = "1";
     }
 
     document.addEventListener("mousemove", onMouseMove, { passive: true });
@@ -134,23 +101,21 @@ export default function CustomCursor() {
       document.removeEventListener("mouseover", onMouseOver);
       document.removeEventListener("mousedown", onMouseDown);
       document.removeEventListener("mouseup", onMouseUp);
-      document.documentElement.removeEventListener(
-        "mouseleave",
-        onDocMouseLeave,
-      );
-      document.documentElement.removeEventListener(
-        "mouseenter",
-        onDocMouseEnter,
-      );
+      document.documentElement.removeEventListener("mouseleave", onDocMouseLeave);
+      document.documentElement.removeEventListener("mouseenter", onDocMouseEnter);
     };
   }, [prefersReducedMotion]);
 
   return (
-    <>
-      {/* Fast dot — snaps immediately, confirms precision */}
-      <div ref={dotRef} className="cursor-dot" aria-hidden="true" />
-      {/* Slow ring — lerps behind, creates magnetic weight */}
-      <div ref={ringRef} className="cursor-ring" aria-hidden="true" />
-    </>
+    <div
+      ref={cursorRef}
+      className="ascii-cursor"
+      style={{ fontFamily: ASCII_FONT_FAMILY }}
+      aria-hidden="true"
+    >
+      <span ref={glyphRef} className="ascii-cursor-glyph">
+        :
+      </span>
+    </div>
   );
 }
