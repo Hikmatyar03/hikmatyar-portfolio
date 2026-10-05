@@ -12,7 +12,7 @@ import JsonLd from "@/components/seo/JsonLd";
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.hikmatyar.site"),
   title: {
-    default: "Hikmatyar — Brand Identity & Campaign Designer",
+    default: "Hikmatyar",
     template: "%s | Hikmatyar",
   },
   description:
