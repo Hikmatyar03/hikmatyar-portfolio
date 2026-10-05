@@ -1,4 +1,4 @@
-import createImageUrlBuilder from "@sanity/image-url";
+import { createImageUrlBuilder } from "@sanity/image-url";
 import { createClient, groq } from "next-sanity";
 import type { CaseStudy, ServicePillar, SiteSettings } from "./types";
 
@@ -166,17 +166,17 @@ export const DEFAULT_CASE_STUDIES: CaseStudy[] = [
       {
         _type: "projectMedia",
         mediaType: "image",
-        url: "/placeholder-media/studio-buntu/02.png",
-        alt: "Brand Applications and Collateral",
-        caption: "Stationery & Printed Applications",
+        url: "/placeholder-media/studio-buntu/03.png",
+        alt: "Typography and Color Architecture",
+        caption: "Typography & Color Architecture",
         isPlaceholder: false,
       },
       {
         _type: "projectMedia",
         mediaType: "image",
-        url: "/placeholder-media/studio-buntu/03.png",
-        alt: "Typography and Color Architecture",
-        caption: "Typography & Color Architecture",
+        url: "/placeholder-media/studio-buntu/02.png",
+        alt: "Brand Applications and Collateral",
+        caption: "Stationery & Printed Applications",
         isPlaceholder: false,
       },
       {
@@ -217,17 +217,75 @@ export const DEFAULT_CASE_STUDIES: CaseStudy[] = [
     year: 2024,
     isOwnVenture: true,
     description:
-      "Artisan textile venture identity celebrating traditional craftsmanship with modern luxury positioning.",
+      "Artisan textile venture celebrating centuries-old handloom heritage with disciplined modern luxury branding.",
+    heroMedia: {
+      _type: "projectMedia",
+      mediaType: "image",
+      url: "/placeholder-media/shawls-and-soul/01-hero-flagship.png",
+      alt: "Shawls & Soul Digital Flagship Experience",
+      caption: "Digital Flagship Store & Web Experience",
+      isPlaceholder: false,
+    },
+    gallery: [
+      {
+        _type: "projectMedia",
+        mediaType: "image",
+        url: "/placeholder-media/shawls-and-soul/02-brand-identity-board.png",
+        alt: "Shawls & Soul Comprehensive Brand Identity Board",
+        caption: "Brand Identity Board & System Guidelines",
+        isPlaceholder: false,
+      },
+      {
+        _type: "projectMedia",
+        mediaType: "image",
+        url: "/placeholder-media/shawls-and-soul/03-brand-moodboard.png",
+        alt: "Shawls & Soul Creative Direction & Moodboard",
+        caption: "Creative Direction, Color Palette & Material Architecture",
+        isPlaceholder: false,
+      },
+      {
+        _type: "projectMedia",
+        mediaType: "image",
+        url: "/placeholder-media/shawls-and-soul/04-packaging-unboxing.png",
+        alt: "Shawls & Soul Bespoke Luxury Packaging & Unboxing Suite",
+        caption: "Bespoke Packaging, Rigid Gift Box & Unboxing Suite",
+        isPlaceholder: false,
+      },
+      {
+        _type: "projectMedia",
+        mediaType: "image",
+        url: "/placeholder-media/shawls-and-soul/05-artisanal-collateral.png",
+        alt: "Artisanal Branding Collateral, Care Cards & Woven Tags",
+        caption: "Tactile Collateral, Authenticity Card & Woven Labels",
+        isPlaceholder: false,
+      },
+      {
+        _type: "projectMedia",
+        mediaType: "image",
+        url: "/placeholder-media/shawls-and-soul/06-swat-editorial.png",
+        alt: "Rooted in Heritage — Swat Editorial Campaign",
+        caption: "Editorial Campaign — Rooted in Heritage, Crafted for Today",
+        isPlaceholder: false,
+      },
+      {
+        _type: "projectMedia",
+        mediaType: "image",
+        url: "/placeholder-media/shawls-and-soul/07-macro-artisan-tag.png",
+        alt: "Handwoven Swati Shawl with Custom Embossed Brand Tag",
+        caption: "Macro Material Detailing & Custom Embossed Tag",
+        isPlaceholder: false,
+      },
+    ],
     context:
-      "I founded Shawls & Soul to bridge traditional handloom heritage with contemporary luxury branding.",
+      "I founded Shawls & Soul to bridge Swat's centuries-old handloom weaving heritage with contemporary luxury branding. As an indigenous artisan craft, Swati shawl weaving represents generational skill and cultural heritage, yet traditional makers lacked the visual positioning and digital infrastructure to reach a discerning global audience.",
     challenge:
-      "Communicating tactile craft and artisanal heritage to an international luxury demographic.",
+      "Translating an organic, tactile heritage craft into a disciplined luxury brand identity system without losing the authentic warmth of the loom or falling into commercial clichés.",
     strategicIdea:
-      "Tactile luxury built on authentic craft heritage.",
+      "Weaving stories into every thread — elevating raw artisanal heritage into timeless modern luxury.",
     identitySystemNotes:
-      "Restrained typography paired with rich macro imagery of loom weaving and organic textures.",
+      "The identity system balances high-contrast editorial typography with warm earthy tones inspired by nature and Swat's landscape: Charcoal (#2B2B2B), Ivory (#F5EBDD), Earth Brown (#8A5E46), and Heritage Rust (#A44B2F). The dynamic 'S' glyph combines the fluid motion of yarn with architectural precision, anchored by refined Cormorant Garamond serif and disciplined Inter sans-serif.",
     outcome:
-      "Established brand positioning and launched initial capsule collection identity.",
+      "Built an end-to-end brand ecosystem from logo mark and packaging architecture to a digital flagship store, establishing Shawls & Soul as an artisanal luxury house.",
   },
   {
     _id: "caseStudy-blu-x",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { gsap } from "gsap";
@@ -32,17 +32,18 @@ const RATIOS = ["portrait", "landscape", "portrait"] as const;
 
 const FALLBACK_SHOWCASE_IMAGES = [
   { image: "/placeholder-media/studio-buntu/01.png" },
+  { image: "/placeholder-media/shawls-and-soul/01-hero-flagship.png" },
   { image: "/placeholder-media/studio-buntu/02.png" },
+  { image: "/placeholder-media/shawls-and-soul/04-packaging-unboxing.png" },
   { image: "/placeholder-media/studio-buntu/03.png" },
+  { image: "/placeholder-media/shawls-and-soul/06-swat-editorial.png" },
   { image: "/placeholder-media/studio-buntu/04.png" },
-  { image: "/placeholder-media/studio-buntu/05.png" },
-  { image: "/placeholder-media/studio-buntu/onwww.jpg" },
-  { image: "/placeholder-media/studio-buntu/vghj.png" },
-  { image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=85" },
+  { image: "/placeholder-media/shawls-and-soul/02-brand-identity-board.png" },
 ];
 
 export default function FeaturedWork({ studies }: FeaturedWorkProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  const [carouselState, setCarouselState] = useState<"loading" | "ready" | "fallback">("loading");
 
   const carouselImages = useMemo(() => {
     const extracted: { image: string }[] = [];
@@ -63,73 +64,84 @@ export default function FeaturedWork({ studies }: FeaturedWorkProps) {
     return FALLBACK_SHOWCASE_IMAGES;
   }, [studies]);
 
+  // Safety fallback: if 3D scene takes >4.5s (slow 3G / throttled network / WebGL delay), gracefully fall back
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCarouselState((prev) => (prev === "loading" ? "fallback" : prev));
+    }, 4500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
     const section = sectionRef.current;
     if (!section) return;
 
-    const cards = section.querySelectorAll<HTMLElement>("[data-reveal-card]");
-    const header = section.querySelector<HTMLElement>("[data-reveal-header]");
-    const rotunda = section.querySelector<HTMLElement>("[data-reveal-rotunda]");
+    const ctx = gsap.context(() => {
+      const cards = section.querySelectorAll<HTMLElement>("[data-reveal-card]");
+      const header = section.querySelector<HTMLElement>("[data-reveal-header]");
+      const rotunda = section.querySelector<HTMLElement>("[data-reveal-rotunda]");
 
-    // Reveal section header first
-    if (header) {
+      // Reveal section header first
+      if (header) {
+        gsap.fromTo(
+          header,
+          { opacity: 0 },
+          {
+            opacity: 1,
+            duration: 0.65,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: section,
+              start: "top 80%",
+              once: true,
+            },
+          },
+        );
+      }
+
+      // Reveal 3D Rotunda Carousel
+      if (rotunda) {
+        gsap.fromTo(
+          rotunda,
+          { opacity: 0, scale: 0.96 },
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 0.8,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: rotunda,
+              start: "top 85%",
+              once: true,
+            },
+          },
+        );
+      }
+
+      // Cards stagger in with a vertical settle
       gsap.fromTo(
-        header,
-        { opacity: 0 },
+        cards,
+        { opacity: 0, y: 40 },
         {
           opacity: 1,
+          y: 0,
           duration: 0.65,
           ease: "power2.out",
+          stagger: 0.1,
           scrollTrigger: {
-            trigger: section,
-            start: "top 80%",
+            trigger: rotunda || section,
+            start: "bottom 80%",
             once: true,
           },
         },
       );
-    }
-
-    // Reveal 3D Rotunda Carousel
-    if (rotunda) {
-      gsap.fromTo(
-        rotunda,
-        { opacity: 0, scale: 0.96 },
-        {
-          opacity: 1,
-          scale: 1,
-          duration: 0.8,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: rotunda,
-            start: "top 85%",
-            once: true,
-          },
-        },
-      );
-    }
-
-    // Cards stagger in with a vertical settle
-    gsap.fromTo(
-      cards,
-      { opacity: 0, y: 40 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.65,
-        ease: "power2.out",
-        stagger: 0.1,
-        scrollTrigger: {
-          trigger: rotunda || section,
-          start: "bottom 80%",
-          once: true,
-        },
-      },
-    );
+    }, sectionRef);
 
     return () => {
-      ScrollTrigger.getAll().forEach((t) => t.kill());
+      ctx.revert();
     };
   }, []);
 
@@ -155,7 +167,7 @@ export default function FeaturedWork({ studies }: FeaturedWorkProps) {
 
         <div className="flex items-center gap-6">
           <span className="font-body text-eyebrow uppercase tracking-widest text-text/40 hidden sm:inline-block">
-            [ DRAG TO EXPLORE ]
+            {carouselState === "fallback" ? "[ ARCHIVE GALLERY ]" : "[ DRAG TO EXPLORE ]"}
           </span>
           <Link
             href="/work"
@@ -169,33 +181,59 @@ export default function FeaturedWork({ studies }: FeaturedWorkProps) {
         </div>
       </div>
 
-      {/* 3D WebGL Rotunda Carousel Showcase */}
+      {/* 3D WebGL Rotunda Carousel Showcase or Resilient Fallback Grid */}
       <div
         data-reveal-rotunda
         className="w-full relative h-[420px] sm:h-[500px] md:h-[580px] lg:h-[640px] mb-16 md:mb-24 overflow-hidden border border-text/10 bg-bg select-none"
         style={{ opacity: 0 }}
       >
-        <RotundaCarousel
-          images={carouselImages}
-          background="#0E0E0E"
-          gap={40}
-          panelWidth={1500}
-          panelHeight={1000}
-          rounded={2}
-          distance={76}
-          tilt={0}
-          speed={30}
-          cursor={{ hover: 85, damping: 55 }}
-          style={{ width: "100%", height: "100%" }}
-        />
+        {carouselState === "fallback" ? (
+          /* Editorial Fallback Grid for Slow Connections / WebGL unavailable */
+          <div className="w-full h-full p-3 sm:p-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 bg-bg overflow-hidden">
+            {carouselImages.slice(0, 8).map((item, idx) => (
+              <div
+                key={idx}
+                className="relative overflow-hidden border border-text/10 bg-white/[0.02] group"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.image}
+                  alt={`Archive artifact ${idx + 1}`}
+                  loading="lazy"
+                  className="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-ui ease-out"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-bg/90 via-transparent to-transparent pointer-events-none" />
+                <span className="absolute bottom-2 left-2 font-body text-[0.62rem] uppercase tracking-wider text-text/50">
+                  {`0${idx + 1}`}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <RotundaCarousel
+            images={carouselImages}
+            background="#0E0E0E"
+            gap={40}
+            panelWidth={1500}
+            panelHeight={1000}
+            rounded={2}
+            distance={76}
+            tilt={0}
+            speed={30}
+            cursor={{ hover: 85, damping: 55 }}
+            style={{ width: "100%", height: "100%" }}
+            onReady={() => setCarouselState("ready")}
+            onError={() => setCarouselState("fallback")}
+          />
+        )}
         
         {/* Subtle bottom edge gradient & interactive indicator */}
         <div className="absolute inset-x-0 bottom-0 pointer-events-none flex items-center justify-between p-4 md:p-6 bg-gradient-to-t from-bg/90 via-bg/20 to-transparent">
           <span className="font-body text-eyebrow uppercase tracking-widest text-text/60 bg-bg/80 px-3 py-1.5 border border-text/10">
-            3D Studio Archive
+            {carouselState === "fallback" ? "Studio Archive" : "3D Studio Archive"}
           </span>
           <span className="font-body text-eyebrow uppercase tracking-widest text-text/40">
-            Interactive Ring
+            {carouselState === "fallback" ? "Curated Grid" : "Interactive Ring"}
           </span>
         </div>
       </div>

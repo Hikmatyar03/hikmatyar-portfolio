@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import ContactFlow from "@/components/contact/ContactFlow";
 
 export const metadata: Metadata = {
-  title: "Contact — Hikmatyar",
+  title: "Start a Project",
   description:
-    "Start a brand identity, campaign, or growth project. Tell me what you're working on.",
+    "Tell me about your brand identity or campaign project. Direct response within 48 hours, no middle layers.",
 };
 
 export default function ContactPage() {

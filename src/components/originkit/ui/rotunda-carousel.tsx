@@ -293,6 +293,8 @@ interface Props {
     width?: number
     height?: number
     style?: React.CSSProperties
+    onReady?: () => void
+    onError?: (error?: string) => void
 }
 
 /* ----------------------------------------------------------------- component */
@@ -310,6 +312,8 @@ export default function RotundaCarousel(props: Props) {
         speed = 100,
         cursor = {"hover":200,"damping":100},
         style,
+        onReady,
+        onError,
     } = props
 
     const { damping = 45, hover = 70 } = cursor
@@ -335,6 +339,8 @@ export default function RotundaCarousel(props: Props) {
         speed,
         damping,
         hover,
+        onReady,
+        onError,
     })
     live.current = {
         images,
@@ -348,6 +354,8 @@ export default function RotundaCarousel(props: Props) {
         speed,
         damping,
         hover,
+        onReady,
+        onError,
     }
 
     // Drag state. `vel` is yaw radians per second, carried out of the gesture as
@@ -372,7 +380,10 @@ export default function RotundaCarousel(props: Props) {
             premultipliedAlpha: true,
             depth: false,
         }) as WebGLRenderingContext | null
-        if (!gl) return
+        if (!gl) {
+            live.current.onError?.("WebGL unsupported")
+            return
+        }
 
         const deriv = !!gl.getExtension("OES_standard_derivatives")
 
@@ -380,12 +391,16 @@ export default function RotundaCarousel(props: Props) {
         const vs = compile(gl, gl.VERTEX_SHADER, VERT)
         const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG(deriv))
         const prog = gl.createProgram()
-        if (!vs || !fs || !prog) return
+        if (!vs || !fs || !prog) {
+            live.current.onError?.("Failed to compile WebGL shaders")
+            return
+        }
         gl.attachShader(prog, vs)
         gl.attachShader(prog, fs)
         gl.linkProgram(prog)
         if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
             console.warn("RotundaCarousel link:", gl.getProgramInfoLog(prog))
+            live.current.onError?.("WebGL program link failed")
             return
         }
         gl.useProgram(prog)
@@ -775,6 +790,7 @@ export default function RotundaCarousel(props: Props) {
             }
         }
         raf = requestAnimationFrame(frame)
+        live.current.onReady?.()
 
         return () => {
             cancelAnimationFrame(raf)

@@ -29,5 +29,9 @@ export default function AsciiCursorScope() {
     (path) => normalizedPath === path
   );
 
-  return <AsciiInkBleedCursor enabled={isEnabled} />;
+  if (!isEnabled) {
+    return null;
+  }
+
+  return <AsciiInkBleedCursor enabled={true} />;
 }

@@ -200,6 +200,8 @@ export default function AsciiInkBleedCursor({
     const DECAY_RATE = 0.016;    // per frame at 60fps
     const BLOOM_RADIUS = width < 640 ? 3 : 4;      // cells radius around cursor (~40-56px)
     const BLOOM_STRENGTH = 0.32; // density added per frame at cursor center
+    const MAX_ACTIVE_CELLS = 600; // Enforced cap preventing unbounded density array growth
+    const activeIndices = new Set<number>();
 
     // If reduced motion, render static resting pattern and stop
     if (prefersReducedMotion) {
@@ -217,6 +219,9 @@ export default function AsciiInkBleedCursor({
       };
     }
 
+    // Initial render of resting background
+    renderer.render(scene, camera);
+
     // ── Animation loop ─────────────────────────────────────────────
     let animFrameId: number;
     let lastTime = performance.now();
@@ -227,9 +232,15 @@ export default function AsciiInkBleedCursor({
       lastTime = now;
 
       // Lerp cursor position (factor ~0.22, matching original)
+      let moved = false;
       if (isMouseActive) {
+        const prevX = currentX;
+        const prevY = currentY;
         currentX += (targetX - currentX) * 0.22;
         currentY += (targetY - currentY) * 0.22;
+        if (Math.abs(currentX - prevX) > 0.05 || Math.abs(currentY - prevY) > 0.05) {
+          moved = true;
+        }
       }
 
       // Convert cursor position to grid coordinates
@@ -237,8 +248,8 @@ export default function AsciiInkBleedCursor({
       const cursorCol = Math.floor(currentX / CELL_SIZE);
       const cursorRow = Math.max(0, Math.min(gridRows - 1, gridRows - 1 - Math.floor(currentY / CELL_SIZE)));
 
-      // ── Paint density near cursor (bloom) ──────────────────────
-      if (isMouseActive) {
+      // ── Paint density near cursor (bloom) with enforced active cap ──
+      if (isMouseActive && moved) {
         for (let dy = -BLOOM_RADIUS; dy <= BLOOM_RADIUS; dy++) {
           for (let dx = -BLOOM_RADIUS; dx <= BLOOM_RADIUS; dx++) {
             const col = cursorCol + dx;
@@ -256,53 +267,79 @@ export default function AsciiInkBleedCursor({
             densityField[idx] = Math.min(1.0, densityField[idx] + addAmount);
             // Track accent: peak density drives accent color blend
             accentField[idx] = Math.min(1.0, accentField[idx] + addAmount * 1.5);
+
+            // Add to active set if within cap
+            if (activeIndices.size < MAX_ACTIVE_CELLS || activeIndices.has(idx)) {
+              activeIndices.add(idx);
+            }
           }
         }
       }
 
-      // ── Decay density field down to resting editorial pattern ──
-      for (let i = 0; i < gridSize; i++) {
-        const rest = restingField[i];
-        if (densityField[i] > rest) {
-          // easeInOutQuad-style decay — slow start, accelerating fade
-          const excess = densityField[i] - rest;
-          const decay = DECAY_RATE * dt * (0.5 + 0.5 * easeInOutQuad(excess));
-          densityField[i] = Math.max(rest, densityField[i] - decay);
-          densityData[i] = Math.floor(densityField[i] * 255);
-        } else {
-          densityField[i] = rest;
-          densityData[i] = Math.floor(rest * 255);
+      // ── Decay density field: iterate ONLY active cells, cull faded entries ──
+      if (activeIndices.size > 0) {
+        const toCull: number[] = [];
+
+        activeIndices.forEach((i) => {
+          const rest = restingField[i];
+          if (densityField[i] > rest) {
+            // easeInOutQuad-style decay — slow start, accelerating fade
+            const excess = densityField[i] - rest;
+            const decay = DECAY_RATE * dt * (0.5 + 0.5 * easeInOutQuad(excess));
+            densityField[i] = Math.max(rest, densityField[i] - decay);
+            densityData[i] = Math.floor(densityField[i] * 255);
+          } else {
+            densityField[i] = rest;
+            densityData[i] = Math.floor(rest * 255);
+          }
+
+          // Accent field decays faster than density (color returns to base first)
+          if (accentField[i] > 0) {
+            accentField[i] = Math.max(0, accentField[i] - DECAY_RATE * 1.8 * dt);
+            accentData[i] = Math.floor(accentField[i] * 255);
+          } else {
+            accentData[i] = 0;
+          }
+
+          // Cull faded entries from active set when fully returned to rest
+          if (densityField[i] <= rest && accentField[i] <= 0) {
+            densityField[i] = rest;
+            accentField[i] = 0;
+            densityData[i] = Math.floor(rest * 255);
+            accentData[i] = 0;
+            toCull.push(i);
+          }
+        });
+
+        // Remove culled indices
+        for (let c = 0; c < toCull.length; c++) {
+          activeIndices.delete(toCull[c]);
         }
 
-        // Accent field decays faster than density (color returns to base first)
-        if (accentField[i] > 0) {
-          accentField[i] = Math.max(0, accentField[i] - DECAY_RATE * 1.8 * dt);
-          accentData[i] = Math.floor(accentField[i] * 255);
-        } else {
-          accentData[i] = 0;
-        }
+        // Upload updated density to GPU only when active entries modified
+        densityTex.needsUpdate = true;
+        accentTex.needsUpdate = true;
+        renderer.render(scene, camera);
       }
 
-      // Upload updated density to GPU
-      densityTex.needsUpdate = true;
-      accentTex.needsUpdate = true;
-
-      renderer.render(scene, camera);
       animFrameId = requestAnimationFrame(render);
     };
 
     animFrameId = requestAnimationFrame(render);
 
-    // ── Resize handler ─────────────────────────────────────────────
+    // ── Resize handler with DPR updates ─────────────────────────────
     const onResize = () => {
       width = window.innerWidth;
       height = window.innerHeight;
+      const curDpr = Math.min(window.devicePixelRatio || 1, 2);
       renderer.setSize(width, height);
+      renderer.setPixelRatio(curDpr);
       material.uniforms.uResolution.value.set(
-        width * dpr,
-        height * dpr
+        width * curDpr,
+        height * curDpr
       );
-      material.uniforms.uCellSize.value = CELL_SIZE * dpr;
+      material.uniforms.uCellSize.value = CELL_SIZE * curDpr;
+      renderer.render(scene, camera);
     };
     window.addEventListener("resize", onResize);
 

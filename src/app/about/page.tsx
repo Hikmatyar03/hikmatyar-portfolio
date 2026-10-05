@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import AboutContent from "@/components/about/AboutContent";
 
 export const metadata: Metadata = {
-  title: "About — Hikmatyar",
+  title: "About",
   description:
-    "Brand identity designer and growth strategist. I build identity systems, campaigns, and growth infrastructure — three disciplines that compound each other.",
+    "I design the systems that make a brand recognizable and the campaigns that make it heard. Direct engagement, zero account managers, zero junior hand-offs.",
 };
 
 export default function AboutPage() {

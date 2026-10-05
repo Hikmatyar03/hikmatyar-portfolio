@@ -20,28 +20,30 @@ export default function ServicesSection({ pillars }: ServicesSectionProps) {
     const section = sectionRef.current;
     if (!section) return;
 
-    const items = section.querySelectorAll<HTMLElement>("[data-pillar]");
+    const ctx = gsap.context(() => {
+      const items = section.querySelectorAll<HTMLElement>("[data-pillar]");
 
-    gsap.fromTo(
-      items,
-      { opacity: 0, y: 28 },
-      {
-        opacity: 1,
-        y: 0,
-        // UX reason: reveals each service pillar one by one so the reader absorbs each before the next arrives
-        duration: 0.65,
-        ease: "power2.out",
-        stagger: 0.1,
-        scrollTrigger: {
-          trigger: section,
-          start: "top 72%",
-          once: true,
+      gsap.fromTo(
+        items,
+        { opacity: 0, y: 28 },
+        {
+          opacity: 1,
+          y: 0,
+          // UX reason: reveals each service pillar one by one so the reader absorbs each before the next arrives
+          duration: 0.65,
+          ease: "power2.out",
+          stagger: 0.1,
+          scrollTrigger: {
+            trigger: section,
+            start: "top 72%",
+            once: true,
+          },
         },
-      },
-    );
+      );
+    }, sectionRef);
 
     return () => {
-      ScrollTrigger.getAll().forEach((t) => t.kill());
+      ctx.revert();
     };
   }, []);
 

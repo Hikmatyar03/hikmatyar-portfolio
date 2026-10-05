@@ -48,28 +48,30 @@ export default function CampaignTemplate({ study, nextStudy }: CampaignTemplateP
     const container = contentRef.current;
     if (!container) return;
 
-    const sections = container.querySelectorAll<HTMLElement>("[data-section]");
+    const ctx = gsap.context(() => {
+      const sections = container.querySelectorAll<HTMLElement>("[data-section]");
 
-    sections.forEach((section) => {
-      gsap.fromTo(
-        section,
-        { opacity: 0, y: rm ? 0 : 28 },
-        {
-          opacity: 1,
-          y: 0,
-          // UX reason: scroll-triggered reveal lets each campaign beat land one at a time
-          duration: rm ? 0.01 : 0.65,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: section,
-            start: "top 80%",
-            once: true,
+      sections.forEach((section) => {
+        gsap.fromTo(
+          section,
+          { opacity: 0, y: rm ? 0 : 28 },
+          {
+            opacity: 1,
+            y: 0,
+            // UX reason: scroll-triggered reveal lets each campaign beat land one at a time
+            duration: rm ? 0.01 : 0.65,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: section,
+              start: "top 80%",
+              once: true,
+            },
           },
-        },
-      );
-    });
+        );
+      });
+    }, contentRef);
 
-    return () => ScrollTrigger.getAll().forEach((t) => t.kill());
+    return () => ctx.revert();
   }, [rm]);
 
   // GSAP horizontal scroll drag for execution gallery strip

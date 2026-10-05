@@ -69,16 +69,29 @@ export default function IdentityTemplate({ study, nextStudy }: IdentityTemplateP
   const rm = prefersReducedMotion;
   const HERO_DURATION = rm ? 0.01 : 0.65;
 
+  // Split gallery between Identity System assets (system architecture, boards, moodboards)
+  // and Applications (collateral, packaging, editorial, touchpoints) so no images are duplicated
+  const isPartitioned = Boolean(study.gallery && study.gallery.length > 2);
+  const identityMedia = isPartitioned
+    ? (study.gallery?.slice(0, 2) ?? [])
+    : (study.gallery ?? []);
+  const applicationMedia = isPartitioned
+    ? (study.gallery?.slice(2) ?? [])
+    : [];
+
+  const hasIdentitySection = !isPlaceholder(study.identitySystemNotes) || identityMedia.length > 0;
+  const hasApplicationsSection = applicationMedia.length > 0;
+
   // Build sidebar nav items — only include sections that have real content
   const sidebarItems = [
     !isPlaceholder(study.context) && { id: "cs-context", label: "Context" },
     !isPlaceholder(study.challenge) && { id: "cs-challenge", label: "Challenge" },
     !isPlaceholder(study.strategicIdea) && { id: "cs-strategy", label: "Strategy" },
-    (!isPlaceholder(study.identitySystemNotes) || (study.gallery && study.gallery.length > 0)) && {
+    hasIdentitySection && {
       id: "cs-identity",
       label: "Identity",
     },
-    study.gallery && study.gallery.length > 0 && { id: "cs-applications", label: "Applications" },
+    hasApplicationsSection && { id: "cs-applications", label: "Applications" },
     !isPlaceholder(study.outcome) && { id: "cs-outcome", label: "Outcome" },
     !study.isOwnVenture && study.credits && study.credits.length > 0 && {
       id: "cs-credits",
@@ -92,28 +105,30 @@ export default function IdentityTemplate({ study, nextStudy }: IdentityTemplateP
     const container = contentRef.current;
     if (!container) return;
 
-    const sections = container.querySelectorAll<HTMLElement>("[data-section]");
+    const ctx = gsap.context(() => {
+      const sections = container.querySelectorAll<HTMLElement>("[data-section]");
 
-    sections.forEach((section) => {
-      gsap.fromTo(
-        section,
-        { opacity: 0, y: rm ? 0 : 28 },
-        {
-          opacity: 1,
-          y: 0,
-          // UX reason: scroll-reveal paces the narrative — each case study section lands before the next appears
-          duration: rm ? 0.01 : 0.65,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: section,
-            start: "top 80%",
-            once: true,
+      sections.forEach((section) => {
+        gsap.fromTo(
+          section,
+          { opacity: 0, y: rm ? 0 : 28 },
+          {
+            opacity: 1,
+            y: 0,
+            // UX reason: scroll-reveal paces the narrative — each case study section lands before the next appears
+            duration: rm ? 0.01 : 0.65,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: section,
+              start: "top 80%",
+              once: true,
+            },
           },
-        },
-      );
-    });
+        );
+      });
+    }, contentRef);
 
-    return () => ScrollTrigger.getAll().forEach((t) => t.kill());
+    return () => ctx.revert();
   }, [rm]);
 
   return (
@@ -270,7 +285,7 @@ export default function IdentityTemplate({ study, nextStudy }: IdentityTemplateP
             )}
 
             {/* ── Identity System Notes + gallery ── */}
-            {(!isPlaceholder(study.identitySystemNotes) || (study.gallery && study.gallery.length > 0)) && (
+            {hasIdentitySection && (
               <Section label="Identity system" id="cs-identity">
                 {!isPlaceholder(study.identitySystemNotes) && (
                   <p className="font-body text-body-lg text-text/80 leading-relaxed mb-10">
@@ -278,22 +293,23 @@ export default function IdentityTemplate({ study, nextStudy }: IdentityTemplateP
                   </p>
                 )}
 
-                {study.gallery && study.gallery.length > 0 ? (
-                  /* Editorial masonry-like grid — alternating portrait / landscape */
-                  <div className="grid grid-cols-2 gap-4">
-                    {study.gallery.slice(0, 4).map((media, i) => (
+                {identityMedia.length > 0 ? (
+                  <div className={`grid ${identityMedia.length === 1 ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"} gap-4 md:gap-6`}>
+                    {identityMedia.map((media, i) => (
                       <div
                         key={i}
                         className={
-                          i === 2
-                            ? "col-span-2" // third item spans full width
+                          identityMedia.length === 1 || (identityMedia.length === 3 && i === 0)
+                            ? "col-span-full"
                             : "col-span-1"
                         }
                       >
                         <MediaBlock
                           media={media}
                           aspectRatio={
-                            i === 2 ? "16 / 9" : i % 2 === 0 ? "4 / 5" : "3 / 2"
+                            identityMedia.length === 1 || media.url?.includes("board") || media.url?.includes("system")
+                              ? "16 / 10"
+                              : "3 / 2"
                           }
                         />
                       </div>
@@ -321,23 +337,29 @@ export default function IdentityTemplate({ study, nextStudy }: IdentityTemplateP
             )}
 
             {/* ── Applications / Full gallery ── */}
-            {study.gallery && study.gallery.length > 0 && (
+            {hasApplicationsSection && (
               <Section label="Applications" id="cs-applications">
                 {/* First item: wide hero shot */}
                 <div className="mb-4 md:mb-6">
                   <MediaBlock
-                    media={study.gallery[0]}
+                    media={applicationMedia[0]}
                     aspectRatio="16 / 9"
                   />
                 </div>
                 {/* Remaining items: alternating portrait pairs */}
-                {study.gallery.length > 1 && (
-                  <div className="grid grid-cols-2 gap-4 md:gap-6">
-                    {study.gallery.slice(1).map((media, i) => (
+                {applicationMedia.length > 1 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                    {applicationMedia.slice(1).map((media, i) => (
                       <div key={i} className="col-span-1">
                         <MediaBlock
                           media={media}
-                          aspectRatio={i % 2 === 0 ? "4 / 5" : "3 / 2"}
+                          aspectRatio={
+                            media.url?.includes("editorial") || media.url?.includes("swat")
+                              ? "4 / 5"
+                              : i % 2 === 0
+                              ? "4 / 5"
+                              : "3 / 2"
+                          }
                         />
                       </div>
                     ))}

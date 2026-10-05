@@ -3,9 +3,9 @@ import { getCaseStudies, getServicePillars } from "@/lib/sanity";
 import WorkArchive from "@/components/work/WorkArchive";
 
 export const metadata: Metadata = {
-  title: "Work — Hikmatyar",
+  title: "Selected Work",
   description:
-    "Brand identity, campaign design, and growth projects. Case studies across all three service pillars.",
+    "Brand identity and campaign design case studies including Studio Buntu, Shawls & Soul, BLU X, and TechFest IMS — systems-first work built with intent.",
 };
 
 // ISR: stays in sync with Sanity content

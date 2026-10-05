@@ -5,9 +5,9 @@ import SectionLabel from "@/components/ui/SectionLabel";
 import CategoryTag from "@/components/ui/CategoryTag";
 
 export const metadata: Metadata = {
-  title: "Services — Hikmatyar",
+  title: "Services",
   description:
-    "Three core discipline pillars: Brand & Identity, Campaign & Content, and Growth & Automation. Systems built to scale businesses with intent.",
+    "Three disciplines, one system: brand strategy and identity design, campaign direction and content, growth automation. Strategy first, then execution.",
 };
 
 // ISR: 60s revalidation matching Sanity fetch defaults

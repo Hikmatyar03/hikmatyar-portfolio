@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getCaseStudies, getCaseStudyBySlug } from "@/lib/sanity";
+import { getCaseStudies, getCaseStudyBySlug, urlForImage } from "@/lib/sanity";
 import IdentityTemplate from "@/components/case-study/IdentityTemplate";
 import CampaignTemplate from "@/components/case-study/CampaignTemplate";
 
@@ -24,24 +24,57 @@ export async function generateStaticParams() {
   }));
 }
 
-/** Per-page title and description — unique per case study */
+/** Per-page title, description, and OpenGraph metadata generated dynamically */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const study = await getCaseStudyBySlug(params.slug);
-  if (!study) return { title: "Project — Hikmatyar" };
+  if (!study) return { title: "Project" };
 
-  const pillarName =
-    study.pillar && typeof study.pillar === "object"
-      ? study.pillar.name
-      : String(study.pillar ?? "");
+  const title = study.client || study.title;
+  const description = study.description;
 
-  const description =
-    study.description && study.description !== "[PLACEHOLDER COPY]"
-      ? study.description
-      : `${study.title} — ${pillarName} by Hikmatyar.`;
+  // Resolve static Open Graph image (OG images must be static images, not video)
+  let ogImage = "/og-image.png";
+  const hero = study.heroMedia;
+  const isVideo =
+    hero?.mediaType === "video" ||
+    hero?.url?.endsWith(".mp4") ||
+    hero?.url?.endsWith(".webm") ||
+    hero?.url?.endsWith(".mov");
+
+  if (hero && hero.mediaType === "image" && !isVideo) {
+    if (hero.url) {
+      ogImage = hero.url;
+    } else if (hero.image?.asset) {
+      try {
+        ogImage = urlForImage(hero.image).width(1200).height(630).url();
+      } catch {
+        ogImage = "/og-image.png";
+      }
+    }
+  }
 
   return {
-    title: `${study.title} — Hikmatyar`,
+    title,
     description,
+    openGraph: {
+      title: `${title} | Hikmatyar`,
+      description,
+      type: "article",
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: `${title} — Hikmatyar Case Study`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | Hikmatyar`,
+      description,
+      images: [ogImage],
+    },
   };
 }
 

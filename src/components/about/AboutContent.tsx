@@ -49,27 +49,29 @@ export default function AboutContent() {
     const container = principlesRef.current;
     if (!container) return;
 
-    const items = container.querySelectorAll<HTMLElement>("[data-principle]");
+    const ctx = gsap.context(() => {
+      const items = container.querySelectorAll<HTMLElement>("[data-principle]");
 
-    gsap.fromTo(
-      items,
-      { opacity: 0, y: rm ? 0 : 24 },
-      {
-        opacity: 1,
-        y: 0,
-        // UX reason: each principle reveals in sequence so the reader absorbs one before the next
-        duration: rm ? 0.01 : 0.65,
-        ease: "power2.out",
-        stagger: 0.1,
-        scrollTrigger: {
-          trigger: container,
-          start: "top 75%",
-          once: true,
+      gsap.fromTo(
+        items,
+        { opacity: 0, y: rm ? 0 : 24 },
+        {
+          opacity: 1,
+          y: 0,
+          // UX reason: each principle reveals in sequence so the reader absorbs one before the next
+          duration: rm ? 0.01 : 0.65,
+          ease: "power2.out",
+          stagger: 0.1,
+          scrollTrigger: {
+            trigger: container,
+            start: "top 75%",
+            once: true,
+          },
         },
-      },
-    );
+      );
+    }, principlesRef);
 
-    return () => ScrollTrigger.getAll().forEach((t) => t.kill());
+    return () => ctx.revert();
   }, [rm]);
 
   return (

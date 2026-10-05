@@ -64,28 +64,44 @@ export default function MagneticCursor() {
       ease: "power2.out",
     });
 
+    interface CachedTarget {
+      rect: DOMRect;
+      centerX: number;
+      centerY: number;
+    }
+
     let hasMovedOnce = false;
     let isHoveredState = false;
-    let cachedTargets: HTMLElement[] = [];
+    let cachedTargets: CachedTarget[] = [];
     let lastQueryTime = 0;
 
     const updateCachedTargets = () => {
       const now = performance.now();
-      if (now - lastQueryTime > 400 || cachedTargets.length === 0) {
+      if (now - lastQueryTime > 350 || cachedTargets.length === 0) {
         lastQueryTime = now;
-        cachedTargets = Array.from(
-          document.querySelectorAll<HTMLElement>(INTERACTIVE_SELECTOR)
-        ).filter((el) => {
-          const rect = el.getBoundingClientRect();
-          return (
+        const elements = document.querySelectorAll<HTMLElement>(INTERACTIVE_SELECTOR);
+        const next: CachedTarget[] = [];
+        const winH = window.innerHeight;
+        const winW = window.innerWidth;
+
+        for (let i = 0; i < elements.length; i++) {
+          const rect = elements[i].getBoundingClientRect();
+          if (
             rect.width > 0 &&
             rect.height > 0 &&
             rect.bottom >= -50 &&
-            rect.top <= window.innerHeight + 50 &&
+            rect.top <= winH + 50 &&
             rect.right >= -50 &&
-            rect.left <= window.innerWidth + 50
-          );
-        });
+            rect.left <= winW + 50
+          ) {
+            next.push({
+              rect,
+              centerX: rect.left + rect.width / 2,
+              centerY: rect.top + rect.height / 2,
+            });
+          }
+        }
+        cachedTargets = next;
       }
     };
 
@@ -136,19 +152,19 @@ export default function MagneticCursor() {
         targetX = clientX + (centerX - clientX) * 0.38;
         targetY = clientY + (centerY - clientY) * 0.38;
       } else {
-        // Check proximity to nearby interactive elements
+        // Check proximity to nearby interactive elements using cached rects (zero forced reflows)
         updateCachedTargets();
         let closestDist = Infinity;
         let closestCenter = { x: clientX, y: clientY };
 
         for (let i = 0; i < cachedTargets.length; i++) {
-          const rect = cachedTargets[i].getBoundingClientRect();
-          const d = getDistanceToRect(clientX, clientY, rect);
+          const target = cachedTargets[i];
+          const d = getDistanceToRect(clientX, clientY, target.rect);
           if (d < closestDist) {
             closestDist = d;
             closestCenter = {
-              x: rect.left + rect.width / 2,
-              y: rect.top + rect.height / 2,
+              x: target.centerX,
+              y: target.centerY,
             };
           }
         }
@@ -232,6 +248,12 @@ export default function MagneticCursor() {
 
     const onScroll = () => {
       lastQueryTime = 0; // Invalidate target cache on scroll
+      cachedTargets = [];
+    };
+
+    const onResize = () => {
+      lastQueryTime = 0;
+      cachedTargets = [];
     };
 
     const onDocMouseLeave = () => setIsVisible(false);
@@ -241,6 +263,7 @@ export default function MagneticCursor() {
 
     window.addEventListener("mousemove", onMouseMove, { passive: true });
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize, { passive: true });
     window.addEventListener("mousedown", onMouseDown, { passive: true });
     window.addEventListener("mouseup", onMouseUp, { passive: true });
     document.documentElement.addEventListener("mouseleave", onDocMouseLeave);
@@ -249,6 +272,7 @@ export default function MagneticCursor() {
     return () => {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
       window.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mouseup", onMouseUp);
       document.documentElement.removeEventListener(

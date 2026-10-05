@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getCaseStudies, getServicePillars, getSiteSettings } from "@/lib/sanity";
 import { getClientLogos } from "@/lib/logos";
 import HeroSection from "@/components/home/HeroSection";
@@ -5,6 +6,12 @@ import FeaturedWork from "@/components/home/FeaturedWork";
 import ServicesSection from "@/components/home/ServicesSection";
 import AboutSection from "@/components/home/AboutSection";
 import ScrollNavDots from "@/components/ui/ScrollNavDots";
+
+export const metadata: Metadata = {
+  title: "Hikmatyar — Brand Identity & Campaign Designer",
+  description:
+    "Independent brand identity designer and campaign strategist working with founders, studios, and creators. Brand systems built with intent, not templates.",
+};
 
 // ISR: revalidate every 60 s — matches sanityFetch default
 export const revalidate = 60;
